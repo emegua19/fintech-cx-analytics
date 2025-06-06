@@ -1,0 +1,31 @@
+# Python
+
+pycache/ 
+*.py[cod] 
+*.pyc 
+.Python
+
+# python environment
+env/ 
+.venv
+.myvenv/
+venv/ 
+
+*.egg-info/ 
+dist/ 
+build/
+
+
+
+# Data
+data/
+*.csv 
+*.log
+
+
+
+# IDE and OS
+
+.vscode/ 
+.idea/ 
+*.DS_Store
