@@ -32,7 +32,11 @@ jobs:
           python -m pip install --upgrade pip
           pip cache purge
           pip install -r requirements.txt
-          pip install pytest flake8
+          pip install pytest
 
       - name: Check Python version
         run: python --version
+        
+      - name: Run tests with pytest
+        run: |
+          pytest src/tests/ --cov=src/task_2/ --cov-report=xml
