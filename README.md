@@ -1,6 +1,3 @@
-###  Updated README.md (ready to copy):
-
-````markdown
 # **Fintech Customer Experience Analytics**
 
 **Overview**  
