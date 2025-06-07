@@ -1,21 +1,18 @@
-# Fintech Reviews Analysis
+# **Fintech Customer Experience Analytics**
+
+**Overview**
+This project is part of the **10 Academy Week 2 Challenge**, focusing on analyzing customer reviews for three Ethiopian banks:
+
+* Commercial Bank of Ethiopia
+* Bank of Abyssinia
+* Dashen Bank
+
+The goal is to derive insights on user experience and sentiment. The project includes **data collection**, **preprocessing**, and **analysis** using **Python** and **machine learning techniques**.
 
 ---
 
-This project analyzes customer satisfaction for mobile apps of three Ethiopian banks (**CBE**, **BOA**, **Dashen Bank**) using an **OOP approach**.  
+## **Folder Structure**
 
-It:
-
-* Scrapes **Google Play Store reviews**
-* Performs **sentiment** and **thematic analysis**
-* Stores data in an **Oracle database**
-* Generates insights with **visualizations**
-
-Built for the **10 Academy Week 2 Challenge** (04–10 June 2025).
-
----
-
-##  Folder Structure
 ```plaintext
 fintech-reviews/
 ├── data/
@@ -25,33 +22,21 @@ fintech-reviews/
 │   │   ├── dashen_reviews_raw.csv
 │   ├── processed/                    # Cleaned review data
 │   │   ├── bank_reviews_cleaned.csv
-│   ├── analysis/                     # Sentiment and theme outputs
-│   │   ├── sentiment_results.csv
-│   │   ├── themes_per_bank.csv
-│   ├── database/                     # SQL scripts for Oracle
-│   │   ├── bank_reviews.sql
+│   ├── analysis/
+│   ├── database/
 ├── src/
 │   ├── __init__.py
 │   ├── task_1/                       # Scraper and Preprocessor classes
 │   │   ├── __init__.py
 │   │   ├── scraper.py                # Scraper class for Google Play reviews
 │   │   ├── preprocessor.py           # Preprocessor class for cleaning data
-│   ├── task_2/                       # SentimentAnalyzer and ThemeAnalyzer classes
-│   │   ├── __init__.py
-│   │   ├── sentiment_analyzer.py     # SentimentAnalyzer class for NLP
-│   │   ├── theme_analyzer.py         # ThemeAnalyzer class for keyword extraction
+│   ├── task_2/                       # SentimentAnalyzer and ThemeAnalyzer classes         
 │   ├── task_3/                       # DatabaseManager and DataInserter classes
-│   │   ├── __init__.py
 │   ├── task_4/                       # InsightsGenerator and Visualizer classes
-│   │   ├── __init__.py
 │   ├── tests/                        # Unit tests for all classes
 │   │   ├── __init__.py
 │   │   ├── test_scraper.py           # Tests for Scraper class
 │   │   ├── test_preprocessor.py      # Tests for Preprocessor class
-│   │   ├── test_sentiment.py         # Tests for SentimentAnalyzer class
-│   │   ├── test_theme.py             # Tests for ThemeAnalyzer class
-│   │   ├── test_database.py          # Tests for DatabaseManager/DataInserter
-│   │   ├── test_insights.py          # Tests for InsightsGenerator/Visualizer
 ├── plots/
 ├── .github/                          # GitHub workflows (optional)
 │   ├── workflows/
@@ -60,67 +45,136 @@ fintech-reviews/
 ├── requirements.txt                  # Dependencies
 ├── README.md                         # Project documentation
 ```
+
 ---
 
-##  Setup
-
-###  Clone Repository
+## **Installation**
 
 ```bash
+# Clone the repository
 git clone https://github.com/emegua19/fintech-cx-analytics.git
-cd fintech-reviews
-```
 
-###  Install Dependencies
-
-```bash
+# Install dependencies
 pip install -r requirements.txt
+
+# Ensure Python 3.10 is used
 ```
 
-###  Run Task 1
+---
 
-**Scraper**  
-```bash
-python -m src.task_1.scraper
-```
-
-**Preprocessor**  
-```bash
-python -m src.task_1.preprocessor
-```
-
-###  Run Tests
+## **Usage**
 
 ```bash
-pytest src/tests/ -v
+# Run the scraper
+python src/task_1/scraper.py
+
+# Run the preprocessor
+python src/task_1/preprocessor.py
+
+# (Task 2 analysis scripts to be added)
 ```
 
 ---
+
+## **Methodology**
+
+### **Task 1: Data Collection and Preprocessing**
+
+#### **Data Collection**
+
+* **Source:** Google Play Store reviews
+* **Banks:** CBE, BOA, Dashen Bank
+* **Tool:** `google-play-scraper` Python library
+* **Target:** 400+ reviews per bank (1200+ total)
+* **Data Fields:**
+
+  * Review text
+  * Rating (1-5)
+  * Date
+  * Bank name
+  * Source (Google Play)
+* **Output:**
+
+  ```
+  data/raw/
+  ├── cbe_reviews_raw.csv
+  ├── boa_reviews_raw.csv
+  └── dashen_reviews_raw.csv
+  ```
+
+#### **Data Preprocessing**
+
+*Implemented in:* `src/task_1/preprocessor.py`
+
+##### **Steps:**
+
+* **Data Loading:**
+
+  * Loads raw CSVs into a single `DataFrame`
+  * Gracefully handles missing or empty files
+
+* **Handling Missing Data:**
+
+  * Missing reviews → `''`
+  * Missing ratings → `0`
+  * Missing bank names → `'Unknown'`
+  * Missing source → `'Google Play'`
+
+* **Text Normalization:**
+
+  * Converts text to lowercase
+  * Removes special characters (preserving Amharic `\u1200-\u137F`)
+  * Strips whitespace
+  * Normalizes bank names (e.g., `CBE` → `cbe`)
+
+* **Duplicate Removal:**
+
+  * Based on review text, date, and bank
+  * Keeps the first occurrence
+  * Reduces duplicates (<5%)
+
+* **Date Normalization:**
+
+  * Converts to `YYYY-MM-DD` using `pd.to_datetime()`
+  * Invalid dates → `NaT`
+
+* **Output:**
+
+  ```
+  data/processed/bank_reviews_cleaned.csv
+  Columns: review, rating, date, bank, source
+  ```
+
+  * Prints first 5 rows before and after cleaning
+
 ---
-##  Dependencies
 
-See `requirements.txt`. Key packages:
+### **Amharic Text Handling**
 
-* `google-play-scraper` — Review scraping
-* `pandas`, `numpy` — Data handling
-* `transformers`, `spacy` — NLP analysis
-* `matplotlib`, `seaborn` — Visualizations
-* `oracledb` — Oracle database connection
-* `pytest` — Unit testing
+* Uses **UTF-8** encoding for CSV I/O
+* Retains Amharic characters using regex `\u1200-\u137F`
+* Supports **bilingual** (Amharic + English) reviews
 
 ---
 
-##  Notes
+## **Testing**
 
-* Use **branches** (`task-1` to `task-4`) with **pull requests** for merging.
-* Update app IDs in `src/utils/config.py`.
-* Fallback to **PostgreSQL** if **Oracle XE** fails; contact facilitators.
-* Use Slack channel **#all-week-2** for support.
+* Unit tests in:
 
+  ```python
+  src/tests/test_preprocessor.py
+  ```
+* Framework: `pytest`
+* Tests cover:
+
+  * Data loading
+  * Cleaning
+  * Duplicate removal
+  * Missing data handling
+  * Normalization
+  * Amharic text preservation
 ---
 
-##  Contact
+## **Contributors**
 
-* **Slack**: `#all-week-2`
-
----
+* **\Yitbarek Geletaw**
