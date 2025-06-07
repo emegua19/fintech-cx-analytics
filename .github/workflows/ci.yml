@@ -39,4 +39,4 @@ jobs:
         
       - name: Run tests with pytest
         run: |
-          pytest src/tests/ --cov=src/task_2/ --cov-report=xml
+          pytest src/tests/ src/task_2/ 
