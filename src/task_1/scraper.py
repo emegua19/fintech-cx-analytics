@@ -1,7 +1,10 @@
 import pandas as pd
 from google_play_scraper import reviews, Sort
 import os
-from src.utils.config import Config
+
+# ------------------------
+# Scraper class
+# ------------------------
 
 class Scraper:
     def __init__(self, config):
@@ -12,16 +15,29 @@ class Scraper:
     def scrape_reviews(self, app_id, app_name, num_reviews=400):
         """Scrape reviews for a specific app from Google Play Store."""
         try:
-            result, _ = reviews(
+            print(f"\n--- Scraping {app_name} EN ---")
+            result_en, _ = reviews(
                 app_id,
-                lang='en',  # Prioritize English (some Amharic may still appear)
-                country='et',  # Ethiopia
+                lang='en',
+                country='et',
                 sort=Sort.NEWEST,
                 count=num_reviews
             )
             
+            print(f"--- Scraping {app_name} AM ---")
+            result_am, _ = reviews(
+                app_id,
+                lang='am',
+                country='et',
+                sort=Sort.NEWEST,
+                count=num_reviews
+            )
+
+            combined = result_en + result_am
+            print(f"Combined total raw reviews: {len(combined)}")
+
             data = []
-            for review in result:
+            for review in combined:
                 content = review['content']
                 if content and content.strip():  # Skip empty reviews
                     data.append({
@@ -31,7 +47,14 @@ class Scraper:
                         'bank': app_name,
                         'source': 'Google Play'
                     })
-            return pd.DataFrame(data)
+
+            df = pd.DataFrame(data)
+
+            # Deduplicate
+            df = df.drop_duplicates(subset=['review', 'date', 'bank'], keep='first')
+            print(f"After deduplication: {len(df)} reviews.")
+
+            return df
         except Exception as e:
             print(f"Error scraping {app_name}: {e}")
             return pd.DataFrame()
@@ -75,38 +98,3 @@ class Scraper:
         else:
             print("\nNo data to save.")
             return False
-
-# ------------------------
-# Main section to run scraper
-# ------------------------
-
-if __name__ == "__main__":
-    print("\n--- Starting Fintech Reviews Scraper ---\n")
-    
-    # Load config
-    config = Config()
-    
-    # Initialize scraper
-    scraper = Scraper(config)
-    
-    # Scrape all banks
-    df = scraper.scrape_all_banks(num_reviews=400)
-    
-    # Save raw data
-    scraper.save_raw_data(df)
-    
-    # EXTRA: display rows/columns per bank
-    for bank in df['bank'].unique():
-        print(f"\n----- Reviews for {bank} -----\n")
-        print(df[df['bank'] == bank].head())  # First 5 rows
-        
-        print(f"\n----- {bank} Ratings Breakdown -----")
-        print(df[df['bank'] == bank]['rating'].value_counts())
-   
-    
-    # Optional: warn if any bank has <400
-    review_counts = df['bank'].value_counts()
-    for bank, count in review_counts.items():
-        if count < 400:
-            print(f"WARNING: Less than 400 reviews collected for {bank}!")
-    print("\n--- Scraping process completed. ---\n")
