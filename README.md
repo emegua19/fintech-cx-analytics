@@ -2,6 +2,9 @@
 
 **Overview**
 This project is part of the **10 Academy Week 2 Challenge**, focusing on analyzing customer reviews for three Ethiopian banks:
+✅ Tasks 1, 2, 3, and 4 fully completed.  
+✅ PostgreSQL used for database integration (fallback from Oracle).  
+✅ Sentiment analysis and thematic analysis implemented and tested.
 
 * Commercial Bank of Ethiopia
 * Bank of Abyssinia
@@ -17,33 +20,69 @@ The goal is to derive insights on user experience and sentiment. The project inc
 fintech-reviews/
 ├── data/
 │   ├── raw/                          # Raw scraped reviews
-│   ├── processed/                    # Cleaned review data and results
+│   │   ├── commercial_bank_of_ethiopia_reviews_raw.csv
+│   │   ├── bank_of_abyssinia_reviews_raw.csv
+│   │   ├── dashen_bank_reviews_raw.csv
+│   │   ├── all_banks_reviews_raw.csv
+│   ├── processed/                    # Cleaned review data and sentiment results
+│   │   ├── bank_reviews_cleaned.csv
+│   │   ├── sentiment_results.csv
+│   │   ├── sentiment_results_aggregated.csv
+│   │   ├── language_distribution.csv
 │   ├── analysis/                     # Thematic outputs
+│   │   ├── themes_per_bank.csv
+│   │   ├── tfidf_keywords.csv
 ├── src/
-│   ├── task_1/                       # Scraper and Preprocessor
-│   ├── task_2/                       # SentimentAnalyzer and ThemeAnalyzer
-│   ├── task_3/                       # DatabaseManager and DataInserter
-│   ├── task_4/                       # Visualizer and Insight classes
-│   ├── utils/                        # Config and DataHandler
+│   ├── task_1/
+│   │   ├── __init__.py
+│   │   ├── scraper.py
+│   │   ├── preprocessor.py
+│   ├── task_2/
+│   │   ├── __init__.py
+│   │   ├── sentiment_analyzer.py
+│   │   ├── theme_analyzer.py
+│   ├── task_3/
+│   │   ├── __init__.py
+│   │   ├── database_manager.py
+│   ├── task_4/
+│   │   ├── __init__.py
+│   │   ├── visualizer.py
+│   │   ├── task4_report.md
+│   ├── utils/
+│   │   ├── __init__.py
 │   │   ├── config.py
 │   │   ├── data_handler.py
-│   ├── tests/                        # Unit tests
+│   ├── tests/
+│   │   ├── __init__.py
 │   │   ├── test_scraper.py
 │   │   ├── test_preprocessor.py
 │   │   ├── test_sentiment.py
 │   │   ├── test_theme.py
-├── scripts/                          # Execution scripts
+├── scripts/
 │   ├── run_scraper.py
 │   ├── run_preprocessor.py
 │   ├── run_sentiment_analysis.py
 │   ├── run_theme_analyzer.py
 │   ├── run_database_insert.py
+│   ├── run_db_insert.py
 │   ├── run_visualizations.py
-├── plots/                            # Task 4 output images
-├── .github/                          # Optional CI workflows
+│   ├── visualize_insights.py
+├── plots/
+│   ├── language_distribution.png
+│   ├── rating_distribution_per_bank.png
+│   ├── sentiment_vs_rating.png
+│   ├── sentiment_by_bank.png
+│   ├── theme_frequency.png
+│   ├── sentiment_vs_theme.png
+│   ├── wordcloud_cbe.png
+│   ├── wordcloud_boa.png
+│   ├── wordcloud_dashen.png
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml
 ├── .gitignore
 ├── requirements.txt
-├── README.md                         # This documentation
+├── README.md
 ```
 
 ---
@@ -159,6 +198,12 @@ python scripts/run_visualizations.py
 ---
 
 ## **Task 4: Visualization**
+This PR completes Task 4 and finalizes the project.
+All tasks have been completed:
+- Task 1 → Scraping + Preprocessing.
+- Task 2 → Sentiment Analysis + Themes (DistilBERT + heuristics for Amharic).
+- Task 3 → PostgreSQL integration used as fallback, full data inserted.
+- Task 4 → Visualizations and insights provided in `plots/` and report.
 
 * 7 plots generated in `plots/`:
 
@@ -190,7 +235,8 @@ Unit tests with `pytest` in `src/tests/`:
 ---
 
 ## **Notes**
-
+* All data used for Task 4 (sentiment, themes, visualizations) is included in `data/processed/` and `plots/`.
+* `run_database_insert.py` was used to insert full review data into PostgreSQL (`bank_reviews` database), fulfilling Task 3.
 * DistilBERT is reliable for English but struggles with mixed-language or noisy input
 * Amharic handled using Unicode-aware regex + keyword heuristics
 * PostgreSQL integration used to simulate enterprise pipelines
