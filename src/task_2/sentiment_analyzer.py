@@ -2,7 +2,6 @@ import pandas as pd
 from transformers import pipeline
 from langdetect import detect, LangDetectException
 import torch
-import numpy as np
 import re
 
 class SentimentAnalyzer:
@@ -32,10 +31,8 @@ class SentimentAnalyzer:
             try:
                 if not text or pd.isna(text) or text.strip() == '' or len(text.strip()) < 5:
                     return 'unknown'
-                # Prioritize Amharic character detection
                 if re.search(r'[\u1200-\u137F]', text):
                     return 'bilingual' if len(re.sub(r'[^\u1200-\u137F]', '', text)) < len(text) * 0.5 else 'amharic'
-                # Detect language for non-Amharic text
                 lang = detect(text)
                 if lang == 'en':
                     return 'english'
@@ -47,46 +44,45 @@ class SentimentAnalyzer:
         return df
 
     def sentiment_analysis(self, df):
-        """Compute sentiment scores using DistilBERT for English-only reviews, simple heuristic for Amharic/Bilingual."""
+        """Compute sentiment scores and categorize as positive, negative, or neutral."""
         def get_sentiment(text):
             if not text or pd.isna(text) or text.strip() == '':
-                return {'label': 'NEUTRAL', 'score': 0.0}
+                return {'label': 'neutral', 'score': 0.0}
             try:
-                result = self.sentiment_pipeline(text[:512])[0]
-                return result
+                result = self.sentiment_pipeline(
+                    text[:512],
+                    clean_up_tokenization_spaces=False  # ✅ Fix for future transformers versions
+                )[0]
+                score = result['score'] if result['label'] == 'POSITIVE' else -result['score']
+                label = 'positive' if score > 0.1 else 'negative' if score < -0.1 else 'neutral'
+                return {'label': label, 'score': score}
             except Exception as e:
-                print(f"Sentiment error: {e}")
-                return {'label': 'NEUTRAL', 'score': 0.0}
+                print(f"Sentiment error for English text '{text[:50]}...': {e}")
+                return {'label': 'neutral', 'score': 0.0}
 
         def get_amharic_sentiment(text):
-            # Simple heuristic based on known Amharic positive/negative words
             positive_words = ['ጥሩ', 'አሪፍ', 'በጣም ጥሩ', 'ተደሰትኩ', 'አመሰግናለሁ']
             negative_words = ['መጥፎ', 'አይሰራም', 'ችግር', 'ተስፋ ቆሟል', 'ቅሬታ']
-
             pos_count = sum(word in text for word in positive_words)
             neg_count = sum(word in text for word in negative_words)
 
             if pos_count > neg_count:
-                return {'label': 'POSITIVE', 'score': 0.7}
+                return {'label': 'positive', 'score': 0.7}
             elif neg_count > pos_count:
-                return {'label': 'NEGATIVE', 'score': -0.7}
+                return {'label': 'negative', 'score': -0.7}
             else:
-                return {'label': 'NEUTRAL', 'score': 0.0}
+                return {'label': 'neutral', 'score': 0.0}
 
-        df['sentiment_label'] = 'NEUTRAL'
+        df['sentiment_label'] = 'neutral'
         df['sentiment_score'] = 0.0
 
-        # Process English reviews with DistilBERT
         english_mask = df['language'] == 'english'
         if english_mask.any():
             results = df.loc[english_mask, 'review'].apply(get_sentiment)
             df.loc[english_mask, 'sentiment_label'] = results.apply(lambda x: x['label'])
-            df.loc[english_mask, 'sentiment_score'] = results.apply(
-                lambda x: x['score'] if x['label'] == 'POSITIVE' else -x['score']
-            )
+            df.loc[english_mask, 'sentiment_score'] = results.apply(lambda x: x['score'])
             print(f"Processed sentiment for {english_mask.sum()} English reviews.")
 
-        # Process Amharic + Bilingual with heuristic
         amharic_mask = df['language'].isin(['amharic', 'bilingual'])
         if amharic_mask.any():
             results = df.loc[amharic_mask, 'review'].apply(get_amharic_sentiment)
@@ -105,12 +101,8 @@ class SentimentAnalyzer:
         agg_df = df.groupby(['bank', 'rating']).agg({
             'sentiment_score': ['mean', 'count']
         }).reset_index()
-
         agg_df.columns = ['bank', 'rating', 'mean_sentiment_score', 'review_count']
-
-        # Sort for nicer CSV output
         agg_df = agg_df.sort_values(by=['bank', 'rating']).reset_index(drop=True)
-
         return agg_df
 
     def save_results(self, df, agg_df, output_path='data/processed/sentiment_results.csv'):
@@ -137,27 +129,23 @@ class SentimentAnalyzer:
         print("Detecting review languages...")
         df = self.detect_language(df)
         print(f"Language distribution:\n{df['language'].value_counts().to_string()}\n")
-
-        # Save language distribution for your report
         df['language'].value_counts().to_csv('data/processed/language_distribution.csv')
         print("Saved language distribution to data/processed/language_distribution.csv\n")
 
         print("Performing sentiment analysis...")
         df = self.sentiment_analysis(df)
 
-        print("\nSample Sentiment Results (first 10 rows):\n")
-        sample_df = df[['review', 'bank', 'rating', 'language', 'sentiment_label', 'sentiment_score']].head(10)
+        print("\nSample Sentiment Results (first 5 rows):\n")
+        sample_df = df[['review', 'bank', 'rating', 'language', 'sentiment_label', 'sentiment_score']].head(5)
         print(sample_df.to_string(index=False))
         print("\n")
 
         print("Aggregating sentiment by bank and rating...")
         agg_df = self.aggregate_sentiment(df)
-
         print("\nAggregated Sentiment Results:\n")
         print(agg_df.to_string(index=False))
         print("\n")
 
-        # Print total reviews processed
         print(f"Total reviews processed: {len(df)}\n")
 
         print("Saving results...")
@@ -166,7 +154,3 @@ class SentimentAnalyzer:
             print("Sentiment analysis complete.")
             return True
         return False
-
-if __name__ == "__main__":
-    analyzer = SentimentAnalyzer()
-    analyzer.main()
