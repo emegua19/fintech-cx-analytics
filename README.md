@@ -19,7 +19,6 @@ fintech-reviews/
 │   ├── raw/                          # Raw scraped reviews
 │   ├── processed/                    # Cleaned review data and results
 │   ├── analysis/                     # Thematic outputs
-│   ├── database/                     # SQL schema and inserts
 ├── src/
 │   ├── task_1/                       # Scraper and Preprocessor
 │   ├── task_2/                       # SentimentAnalyzer and ThemeAnalyzer
