@@ -1,13 +1,13 @@
 # **Fintech Customer Experience Analytics**
 
-**Overview**  
+**Overview**
 This project is part of the **10 Academy Week 2 Challenge**, focusing on analyzing customer reviews for three Ethiopian banks:
 
 * Commercial Bank of Ethiopia
 * Bank of Abyssinia
 * Dashen Bank
 
-The goal is to derive insights on user experience and sentiment. The project includes **data collection**, **preprocessing**, **sentiment analysis**, and **visualization** using **Python** and **machine learning techniques**.
+The goal is to derive insights on user experience and sentiment. The project includes **data collection**, **preprocessing**, **sentiment analysis**, **database integration**, **thematic analysis**, and **visualization** using **Python**, **PostgreSQL**, and **machine learning techniques**.
 
 ---
 
@@ -17,40 +17,35 @@ The goal is to derive insights on user experience and sentiment. The project inc
 fintech-reviews/
 ├── data/
 │   ├── raw/                          # Raw scraped reviews
-│   │   ├── cbe_reviews_raw.csv
-│   │   ├── boa_reviews_raw.csv
-│   │   ├── dashen_reviews_raw.csv
 │   ├── processed/                    # Cleaned review data and results
-│   │   ├── bank_reviews_cleaned.csv
-│   │   ├── sentiment_results.csv
-│   │   ├── sentiment_results_aggregated.csv
-│   │   ├── language_distribution.csv
-│   ├── analysis/
-│   ├── database/
+│   ├── analysis/                     # Thematic outputs
+│   ├── database/                     # SQL schema and inserts
 ├── src/
-│   ├── __init__.py
-│   ├── task_1/                       # Scraper and Preprocessor classes
-│   │   ├── __init__.py
-│   │   ├── scraper.py                # Scraper class for Google Play reviews
-│   │   ├── preprocessor.py           # Preprocessor class for cleaning data
-│   ├── task_2/                       # SentimentAnalyzer and ThemeAnalyzer classes         
-│   │   ├── __init__.py
-│   │   ├── sentiment_analyzer.py     # SentimentAnalyzer class for sentiment analysis
-│   ├── task_3/                       # DatabaseManager and DataInserter classes
-│   ├── task_4/                       # InsightsGenerator and Visualizer classes
-│   ├── tests/                        # Unit tests for all classes
-│   │   ├── __init__.py
-│   │   ├── test_scraper.py           # Tests for Scraper class
-│   │   ├── test_preprocessor.py      # Tests for Preprocessor class
-│   │   ├── test_sentiment_analyzer.py# Tests for SentimentAnalyzer class
-├── plots/                            # Visualization outputs (Task 4)
-├── .github/                          # GitHub workflows (optional)
-│   ├── workflows/
-│   │   ├── ci.yml                   
-├── .gitignore                        # Ignored files
-├── requirements.txt                  # Dependencies
-├── README.md                         # Project documentation
-````
+│   ├── task_1/                       # Scraper and Preprocessor
+│   ├── task_2/                       # SentimentAnalyzer and ThemeAnalyzer
+│   ├── task_3/                       # DatabaseManager and DataInserter
+│   ├── task_4/                       # Visualizer and Insight classes
+│   ├── utils/                        # Config and DataHandler
+│   │   ├── config.py
+│   │   ├── data_handler.py
+│   ├── tests/                        # Unit tests
+│   │   ├── test_scraper.py
+│   │   ├── test_preprocessor.py
+│   │   ├── test_sentiment.py
+│   │   ├── test_theme.py
+├── scripts/                          # Execution scripts
+│   ├── run_scraper.py
+│   ├── run_preprocessor.py
+│   ├── run_sentiment_analysis.py
+│   ├── run_theme_analyzer.py
+│   ├── run_database_insert.py
+│   ├── run_visualizations.py
+├── plots/                            # Task 4 output images
+├── .github/                          # Optional CI workflows
+├── .gitignore
+├── requirements.txt
+├── README.md                         # This documentation
+```
 
 ---
 
@@ -59,11 +54,31 @@ fintech-reviews/
 ```bash
 # Clone the repository
 git clone https://github.com/emegua19/fintech-cx-analytics.git
+cd fintech-cx-analytics
 
 # Install dependencies
 pip install -r requirements.txt
+```
 
-# Ensure Python 3.10 is used
+---
+
+## **Git Setup**
+
+```bash
+# Set up Git for collaboration
+# Create and switch to a new task branch (e.g., task-1)
+git checkout -b task-1
+
+# Stage changes
+git add .
+
+# Commit with a meaningful message
+git commit -m "Add scraper implementation"
+
+# Push to GitHub
+git push origin task-1
+
+# Create a pull request to merge into main
 ```
 
 ---
@@ -71,149 +86,113 @@ pip install -r requirements.txt
 ## **Usage**
 
 ```bash
-# Run the scraper (Task 1)
-python src/task_1/scraper.py
+# Task 1: Scraping and Preprocessing
+python scripts/run_scraper.py
+python scripts/run_preprocessor.py
 
-# Run the preprocessor (Task 1)
-python src/task_1/preprocessor.py
+# Task 2: Sentiment + Thematic Analysis
+python scripts/run_sentiment_analysis.py
+python scripts/run_theme_analyzer.py
 
-# Run the sentiment analyzer (Task 2)
-python src/task_2/sentiment_analyzer.py
+# Task 3: Store cleaned data into PostgreSQL
+python scripts/run_database_insert.py
+
+# Task 4: Generate final visualizations
+python scripts/run_visualizations.py
 ```
 
 ---
 
-## **Methodology**
+## **Task 1: Data Collection and Preprocessing**
 
-### **Task 1: Data Collection and Preprocessing**
+### **Data Collection**
 
-#### **Data Collection**
+* Scrape reviews using `google-play-scraper` in English and Amharic
+* Apps: CBE, BOA, Dashen
+* Fields: `review`, `rating`, `date`, `bank`, `source`
+* Output: `data/raw/*.csv`
 
-* **Source:** Google Play Store reviews
+### **Preprocessing**
 
-* **Banks:** CBE, BOA, Dashen Bank
-
-* **Tool:** `google-play-scraper` Python library
-
-* **Target:** 400+ reviews per bank (1200+ total)
-
-* **Data Fields:**
-
-  * Review text
-  * Rating (1-5)
-  * Date
-  * Bank name
-  * Source (Google Play)
-
-* **Output:** `data/raw/*.csv`
-
-#### **Data Preprocessing**
-
-*Implemented in:* `src/task_1/preprocessor.py`
-
-##### **Steps:**
-
-* **Data Loading:** Load raw CSVs into a single DataFrame
-* **Handling Missing Data:** Replace missing values (reviews, ratings, bank names, source)
-* **Text Normalization:** Lowercase, remove special characters, preserve Amharic `\u1200-\u137F`
-* **Duplicate Removal:** Based on review text + date
-* **Date Normalization:** Convert to `YYYY-MM-DD`
-* **Output:** `data/processed/bank_reviews_cleaned.csv`
+* Remove duplicates, handle missing data, normalize text (Amharic preserved)
+* Normalize dates, filter invalid ratings
+* Language detection via regex + langdetect
+* Output: `data/processed/bank_reviews_cleaned.csv`
 
 ---
 
-### **Amharic Text Handling**
+## **Task 2: Sentiment and Thematic Analysis**
 
-* Uses **UTF-8** encoding for CSV I/O
-* Preserves Amharic Unicode characters `\u1200-\u137F`
-* Supports **bilingual** (Amharic + English) reviews
-* Language detection uses:
+### **Sentiment Analysis**
 
-  * `langdetect` for general language detection
-  * Regex for **Amharic/Bilingual** prioritization
+* Model: `distilbert-base-uncased-finetuned-sst-2-english`
+* Custom rule-based heuristics for Amharic and bilingual reviews
+* Score range: \[-1, 1]
+* Output:
+
+  * `sentiment_results.csv`
+  * `sentiment_results_aggregated.csv`
+
+### **Thematic Analysis**
+
+* Extract keywords using TF-IDF
+* Group into 3–5 themes per bank:
+
+  * Account Access Issues
+  * Transaction Performance
+  * User Experience
+  * Support & Communication
+  * Feature Requests
+* Output includes themes with examples per review
 
 ---
 
-### **Task 2: Sentiment Analysis**
+## **Task 3: Database Integration**
 
-*Implemented in:* `src/task_2/sentiment_analyzer.py`
+* PostgreSQL used (fallback from Oracle)
+* Two tables:
 
-#### **Sentiment Analysis Pipeline**
+  * `banks`: ID, name
+  * `reviews`: review text, rating, sentiment, theme, date, foreign key to bank
+* Data inserted using `psycopg2`
+* Dump file: `data/database/postgres_dump.sql`
 
-* **Model:** `distilbert-base-uncased-finetuned-sst-2-english`
-* **Languages:**
+---
 
-  * English → Analyzed using DistilBERT
-  * Amharic + Bilingual → Analyzed using a **custom heuristic**:
+## **Task 4: Visualization**
 
-    * Simple keyword-based matching:
+* 7 plots generated in `plots/`:
 
-      * Positive words → POSITIVE (+0.7)
-      * Negative words → NEGATIVE (-0.7)
-      * Else → NEUTRAL (0.0)
-* **Unknown / unsupported languages → NEUTRAL**
-
-#### **Aggregation**
-
-* Aggregated sentiment score by:
-
-  * `bank`
-  * `rating`
-
-* **Output:**
-
-  * `data/processed/sentiment_results.csv` → detailed results
-  * `data/processed/sentiment_results_aggregated.csv` → for Task 4 visualizations
-  * `data/processed/language_distribution.csv`
-
-#### **Sample insights**
-
-* 1-star reviews → strongly negative sentiment → expected
-* 5-star reviews → strongly positive sentiment → expected
-* Language distribution:
-
-  * English \~ 686
-  * Amharic \~ 40
-  * Bilingual \~ 6
-  * Others → detected but not processed (kept as NEUTRAL)
+  * Language distribution
+  * Rating distribution per bank
+  * Sentiment vs rating
+  * Sentiment by bank
+  * Theme frequency
+  * Sentiment vs theme
+  * WordCloud per bank
 
 ---
 
 ## **Testing**
 
-* Unit tests in:
+Unit tests with `pytest` in `src/tests/`:
 
-```python
-src/tests/test_preprocessor.py
-src/tests/test_sentiment_analyzer.py
-```
-
-* Framework: `pytest`
-
-* Tests cover:
-
-  * Language detection
-  * Sentiment analysis (English + Amharic + Bilingual)
-  * Data loading
-  * Cleaning
-  * Duplicate removal
-  * Missing data handling
-  * Normalization
-  * Amharic text preservation
+* Scraper (`test_scraper.py`)
+* Preprocessor (`test_preprocessor.py`)
+* Sentiment Analyzer (`test_sentiment.py`)
+* Thematic Analyzer (`test_theme.py`)
 
 ---
 
 ## **Contributors**
 
-* **Yitbarek Geletaw**
+* Yitbarek Geletaw
 
 ---
 
 ## **Notes**
 
-* Bilingual and Amharic sentiment was handled with a simple heuristic due to lack of a high-quality Amharic transformer model.
-* English sentiment analysis uses a state-of-the-art transformer model (DistilBERT).
-* Future improvements:
-
-  * Explore better Amharic sentiment models
-  * Expand theme extraction (Task 2 extension)
+* DistilBERT is reliable for English but struggles with mixed-language or noisy input
+* Amharic handled using Unicode-aware regex + keyword heuristics
+* PostgreSQL integration used to simulate enterprise pipelines
+* Future: Improve Amharic model, enhance clustering using LDA or BERTopic
